@@ -3,9 +3,18 @@
     <head>
         <script src="https://code.createjs.com/1.0.0/easeljs.min.js"></script>
         <script src="game.js"></script>
+        <style type="text/css">
 
+        </style>
+        
     </head>
-    <body>
-        <canvas id="canvas"></canvas>
+    <body onresize="resize()">
+    	<h1>
+    		orbital chess
+    	</h1>	
+    	<canvas style="border: 1px solid black;" id="canvas"></canvas>
     </body>
+    <script type="text/javascript">
+    	init()
+    </script>
 </html>
