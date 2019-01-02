@@ -27,6 +27,7 @@ var highlighted = [
 
 var pieces = []
 
+var selected;
 
 function init(){
 
@@ -54,8 +55,24 @@ function init(){
 		// console.log('('+x+','+y+')');
 		// console.log(rad);
 		// console.log(angle);
+		
+		function matchesCoords(p){
+			if(rad == 0 ){
+				return p.rad == 0;
+			}
+			return p.rad == rad && p.angle == angle;
+		}
 
-		highlightTile(rad,angle);
+		if(typeof selected == 'undefined'){
+			selected = pieces.filter(matchesCoords)[0];
+		} else {
+			selected.move(rad,angle);
+			selected = undefined;
+		}
+
+		console.log(selected);
+
+		redraw();
 
 	});
 
@@ -84,7 +101,7 @@ function redraw(){
 function highlightTile(rad, angle){
 	if(rad > 0){
 		drawTile(rad,angle,"rgba(0, 0, 139,0.5)");
-	} else {
+	} else if(rad == 0){
 		context.beginPath()
 		var r = rTotal / 8;
 		context.arc(canvas.width/2,canvas.height/2,r,0,2*Math.PI);
@@ -141,8 +158,13 @@ class Piece {
 	
 	}
 
+	move (rad, angle){
+		this.rad = rad;
+		this.angle = angle;
+	}
+
 	draw(){
-		console.log(this)
+		// console.log(this)
 		var imgPath
 		if(this.pColor == "black"){
 			imgPath = blackPeicePaths[this.pType];
