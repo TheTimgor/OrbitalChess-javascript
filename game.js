@@ -1,6 +1,6 @@
 var canvas;
 var context;
-var blackPeicePaths = {
+var blackPiecePaths = {
 	"king" 		: "resources/BlackCommandCenter.png",	
 	"knight" 	: "resources/BlackHopper.png",	
 	"queen" 	: "resources/BlackMothership.png",	
@@ -9,7 +9,7 @@ var blackPeicePaths = {
 	"rook"		: "resources/BlackTurret.png"	
 } 
 
-var whitePeicePaths = {
+var whitePiecePaths = {
 	"king" 		: "resources/WhiteCommandCenter.png",	
 	"knight" 	: "resources/WhiteHopper.png",	
 	"queen" 	: "resources/WhiteMothership.png",	
@@ -23,6 +23,9 @@ var highlighted = []
 var pieces = []
 
 var selected = '';
+
+var move = 0;
+var currentPlayer = 'white'
 
 function init(){
 
@@ -81,16 +84,21 @@ function init(){
 		// console.log(rad);
 		// console.log(angle);
 		
-		if(selected != ''){
-			console.log(isMoveLegal(rad,angle,selected));
-		}
-		if(selected == ''){
-			selected = pieceAt(rad,angle);
-		} else if(isMoveLegal(rad,angle,selected)){
+		if(selected == '' && typeof pieceAt(rad,angle) !== 'undefined'){
+			if(pieceAt(rad,angle).pColor == currentPlayer){
+				selected = pieceAt(rad,angle);
+			}
+		} else if(isMoveLegal(rad,angle,selected) ){
 			var index = pieces.indexOf(pieceAt(rad, angle));
 			if (index !== -1) pieces.splice(index, 1);
 			selected.move(rad,angle);
-			selected = '';			
+			selected = '';
+			move++;
+			if(currentPlayer=='white'){
+				currentPlayer = 'black';
+			} else {
+				currentPlayer = 'white';
+			}
 		}
 
 		console.log(selected);
@@ -195,10 +203,10 @@ class Piece {
 		// console.log(this)
 		var imgPath
 		if(this.pColor == "black"){
-			imgPath = blackPeicePaths[this.pType];
+			imgPath = blackPiecePaths[this.pType];
 		}
 		if(this.pColor == "white"){
-			imgPath = whitePeicePaths[this.pType];
+			imgPath = whitePiecePaths[this.pType];
 		}
 
 		var img = new Image()
