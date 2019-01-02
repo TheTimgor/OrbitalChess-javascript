@@ -18,23 +18,48 @@ var whitePeicePaths = {
 	"rook"		: "resources/WhiteTurret.png"	
 }
 
-var highlighted = [
-	[1,2],
-	[4,6],
-	[8,15],
-	[0,0]
-]
+var highlighted = []
 
 var pieces = []
 
-var selected;
+var selected = '';
 
 function init(){
 
-	pieces.push(new Piece(1,2,"king","black"));
-	pieces.push(new Piece(0,0,"pawn","white"));
-	pieces.push(new Piece(4,6,"queen","white"));
-	pieces.push(new Piece(8,15,"bishop","black"));
+	pieces.push(new Piece(8,3,"king","black"));
+	pieces.push(new Piece(8,4,"queen","black"));
+	pieces.push(new Piece(8,5,"rook","black"));
+	pieces.push(new Piece(8,2,"rook","black"));
+	pieces.push(new Piece(7,3,"bishop","black"));
+	pieces.push(new Piece(7,4,"bishop","black"));
+	pieces.push(new Piece(6,3,"knight","black"));
+	pieces.push(new Piece(6,4,"knight","black"));
+	pieces.push(new Piece(8,1,"pawn","black"));
+	pieces.push(new Piece(7,2,"pawn","black"));
+	pieces.push(new Piece(6,2,"pawn","black"));
+	pieces.push(new Piece(5,3,"pawn","black"));
+	pieces.push(new Piece(5,4,"pawn","black"));
+	pieces.push(new Piece(6,5,"pawn","black"));
+	pieces.push(new Piece(7,5,"pawn","black"));
+	pieces.push(new Piece(8,6,"pawn","black"));
+	
+	pieces.push(new Piece(8,12,"king","white"));
+	pieces.push(new Piece(8,11,"queen","white"));
+	pieces.push(new Piece(8,5+8,"rook","white"));
+	pieces.push(new Piece(8,2+8,"rook","white"));
+	pieces.push(new Piece(7,3+8,"bishop","white"));
+	pieces.push(new Piece(7,4+8,"bishop","white"));
+	pieces.push(new Piece(6,3+8,"knight","white"));
+	pieces.push(new Piece(6,4+8,"knight","white"));
+	pieces.push(new Piece(8,1+8,"pawn","white"));
+	pieces.push(new Piece(7,2+8,"pawn","white"));
+	pieces.push(new Piece(6,2+8,"pawn","white"));
+	pieces.push(new Piece(5,3+8,"pawn","white"));
+	pieces.push(new Piece(5,4+8,"pawn","white"));
+	pieces.push(new Piece(6,5+8,"pawn","white"));
+	pieces.push(new Piece(7,5+8,"pawn","white"));
+	pieces.push(new Piece(8,6+8,"pawn","white"));
+	
 
 	canvas = $("#canvas").get()[0];
 	context = canvas.getContext("2d");
@@ -56,18 +81,16 @@ function init(){
 		// console.log(rad);
 		// console.log(angle);
 		
-		function matchesCoords(p){
-			if(rad == 0 ){
-				return p.rad == 0;
-			}
-			return p.rad == rad && p.angle == angle;
+		if(selected != ''){
+			console.log(isMoveLegal(rad,angle,selected));
 		}
-
-		if(typeof selected == 'undefined'){
-			selected = pieces.filter(matchesCoords)[0];
-		} else {
+		if(selected == ''){
+			selected = pieceAt(rad,angle);
+		} else if(isMoveLegal(rad,angle,selected)){
+			var index = pieces.indexOf(pieceAt(rad, angle));
+			if (index !== -1) pieces.splice(index, 1);
 			selected.move(rad,angle);
-			selected = undefined;
+			selected = '';			
 		}
 
 		console.log(selected);
@@ -99,46 +122,51 @@ function redraw(){
 }
 
 function highlightTile(rad, angle){
-	if(rad > 0){
-		drawTile(rad,angle,"rgba(0, 0, 139,0.5)");
-	} else if(rad == 0){
-		context.beginPath()
-		var r = rTotal / 8;
-		context.arc(canvas.width/2,canvas.height/2,r,0,2*Math.PI);
-		context.fillStyle = "rgba(0, 0, 139,0.5)"
-		context.fill()
-	}
+
+	drawTile(rad,angle,"rgba(0, 0, 139,0.5)");
 
 }
 
 function drawTile(rad, angle, color){
-	var r1 =  rad * rTotal/8;
-	var r2 =  (rad + 1) * rTotal/8;
-	var theta = (-angle-1) * (Math.PI/8);
 
-	context.beginPath();
-	context.arc(canvas.width/2,canvas.height/2,r1,theta,Math.PI/8 + theta);
-	context.arc(canvas.width/2,canvas.height/2,r2,Math.PI/8 + theta,theta,true);
-	context.lineTo(canvas.width/2 + r1*Math.cos(theta),canvas.height/2 +r1*Math.sin(theta));
-	context.closePath();
-	context.fillStyle = color;
-	context.fill();
-	context.stroke();
+	if(rad > 0){
+		var r1 =  rad * rTotal/8;
+		var r2 =  (rad + 1) * rTotal/8;
+		var theta = (-angle-1) * (Math.PI/8);
+
+		context.beginPath();
+		context.arc(canvas.width/2,canvas.height/2,r1,theta,Math.PI/8 + theta);
+		context.arc(canvas.width/2,canvas.height/2,r2,Math.PI/8 + theta,theta,true);
+		context.lineTo(canvas.width/2 + r1*Math.cos(theta),canvas.height/2 +r1*Math.sin(theta));
+		context.closePath();
+		context.fillStyle = color;
+		context.fill();
+		context.stroke();
+
+	} else if(rad == 0){
+		context.beginPath()
+		var r = rTotal / 8;
+		context.arc(canvas.width/2,canvas.height/2,r,0,2*Math.PI);
+		context.fillStyle = color
+		context.fill()
+		context.stroke();
+	}
 }
 
 function drawBoard(){
 	console.log("drawing board")
 	for (var j = 1; j < 8 ; j+=2) {
 		for (var i = 0; i < 16; i+=2) {
-			drawTile(j,i,"rosybrown");
-			drawTile(j,i+1,"white")	;
+			drawTile(j,i,"wheat");
+			drawTile(j,i+1,"rosybrown")	;
 		}
 		for (var i = 0; i < 16; i+=2) {
-			drawTile(j+1,i+1,"rosybrown");
-			drawTile(j+1,i,"white");
+			drawTile(j+1,i+1,"wheat");
+			drawTile(j+1,i,"rosybrown");
 		}
 		
 	}
+	drawTile(0,0,"wheat")
 	
 }
 
@@ -158,7 +186,7 @@ class Piece {
 	
 	}
 
-	move (rad, angle){
+	move(rad, angle){
 		this.rad = rad;
 		this.angle = angle;
 	}
@@ -198,6 +226,94 @@ class Piece {
 			
 	}
 	
+}
+
+function pieceAt(rad,angle){
+	function matchesCoords(p){
+		if(rad == 0 ){
+			return p.rad == 0;
+		}
+		return p.rad == rad && p.angle == angle;
+	}
+	return pieces.filter(matchesCoords)[0];
+
+}
+
+function isMoveLegal(rad,angle,piece){
+	var moveTypes = {
+		"pawn" : function(rad,angle,piece){
+			console.log("checking for pawn")
+			if(typeof pieceAt(rad, angle) !== 'undefined'){
+				console.log(pieceAt(rad, angle).pColor);
+				console.log(piece.pColor);
+				if(pieceAt(rad, angle).pColor == piece.pColor){
+					return false;
+				}
+			}
+			return true;
+		},
+		"king" : function(rad,angle,piece){
+			console.log("checking for pawn")
+			if(typeof pieceAt(rad, angle) !== 'undefined'){
+				console.log(pieceAt(rad, angle).pColor);
+				console.log(piece.pColor);
+				if(pieceAt(rad, angle).pColor == piece.pColor){
+					return false;
+				}
+			}
+			return true;
+		},
+		"knight" : function(rad,angle,piece){
+			console.log("checking for pawn")
+			if(typeof pieceAt(rad, angle) !== 'undefined'){
+				console.log(pieceAt(rad, angle).pColor);
+				console.log(piece.pColor);
+				if(pieceAt(rad, angle).pColor == piece.pColor){
+					return false;
+				}
+			}
+			return true;
+		},
+		"queen" : function(rad,angle,piece){
+			console.log("checking for pawn")
+			if(typeof pieceAt(rad, angle) !== 'undefined'){
+				console.log(pieceAt(rad, angle).pColor);
+				console.log(piece.pColor);
+				if(pieceAt(rad, angle).pColor == piece.pColor){
+					return false;
+				}
+			}
+			return true;
+		},
+		"bishop" : function(rad,angle,piece){
+			console.log("checking for pawn")
+			if(typeof pieceAt(rad, angle) !== 'undefined'){
+				console.log(pieceAt(rad, angle).pColor);
+				console.log(piece.pColor);
+				if(pieceAt(rad, angle).pColor == piece.pColor){
+					return false;
+				}
+			}
+			return true;
+		},
+		"rook" : function(rad,angle,piece){
+			console.log("checking for pawn")
+			if(typeof pieceAt(rad, angle) !== 'undefined'){
+				console.log(pieceAt(rad, angle).pColor);
+				console.log(piece.pColor);
+				if(pieceAt(rad, angle).pColor == piece.pColor){
+					return false;
+				}
+			}
+			return true;
+		}
+
+	}
+	var legal = moveTypes[piece.pType](rad,angle,piece);
+	if(typeof legal == 'undefined'){
+		legal = false;
+	}
+	return legal;
 }
 
 $(document).ready(init);
