@@ -27,6 +27,7 @@ var highlighted = [
 
 var pieces = []
 
+
 function init(){
 
 	pieces.push(new Piece(1,2,"king","black"));
@@ -36,6 +37,28 @@ function init(){
 
 	canvas = $("#canvas").get()[0];
 	context = canvas.getContext("2d");
+
+	// onclick function (IMPORTANT)
+	canvas.addEventListener('click', function(event){
+		var x = (event.pageX - canvas.offsetLeft) - canvas.width/2;
+		var y = canvas.height/2 - (event.pageY- canvas.offsetTop);
+		var r = Math.sqrt(x*x+y*y)
+		var rad = parseInt(8 * r / rTotal); 
+		var theta = -Math.atan2(y,-x) + (Math.PI);
+		var angle = parseInt(theta / (Math.PI / 8))
+
+		if(rad>8){
+			rad = -1;
+		}
+
+		// console.log('('+x+','+y+')');
+		// console.log(rad);
+		// console.log(angle);
+
+		highlightTile(rad,angle);
+
+	});
+
 	window.onresize = redraw;
 	redraw();
 }
@@ -43,6 +66,10 @@ function init(){
 function redraw(){
 	canvas.width = window.innerWidth - 10;
 	canvas.height = window.innerHeight -110;
+	rTotal = Math.min(canvas.width,canvas.height)/2 - 35;
+	if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+		rTotal -= 50;
+	}
 	drawBoard();
 	for(var i of highlighted){
 		highlightTile(i[0],i[1]);
@@ -59,7 +86,7 @@ function highlightTile(rad, angle){
 		drawTile(rad,angle,"rgba(0, 0, 139,0.5)");
 	} else {
 		context.beginPath()
-		var r = (Math.min(canvas.width,canvas.height)/2 - 35) / 8;
+		var r = rTotal / 8;
 		context.arc(canvas.width/2,canvas.height/2,r,0,2*Math.PI);
 		context.fillStyle = "rgba(0, 0, 139,0.5)"
 		context.fill()
@@ -68,7 +95,6 @@ function highlightTile(rad, angle){
 }
 
 function drawTile(rad, angle, color){
-	var rTotal = Math.min(canvas.width,canvas.height)/2 - 35;
 	var r1 =  rad * rTotal/8;
 	var r2 =  (rad + 1) * rTotal/8;
 	var theta = (-angle-1) * (Math.PI/8);
@@ -99,6 +125,12 @@ function drawBoard(){
 	
 }
 
+// function onClick(event){
+// 	var x = event.pageX - canvas.offsetLeft;
+// 	var y = event.pageY- canvas.offsetTop;
+// 	console.log("(")
+// }
+
 class Piece {
 	
 	constructor (rad, angle, pType, pColor){
@@ -127,7 +159,6 @@ class Piece {
 			}
 			context.save()
 			var theta = (-angle-1) * (Math.PI/8) + Math.PI/16 - Math.PI/2;
-			var rTotal = Math.min(canvas.width,canvas.height)/2 - 35;
 			var r =  rad * rTotal/8 + 2;
 			context.translate(canvas.width/2,canvas.height/2);
 			context.rotate(theta);
