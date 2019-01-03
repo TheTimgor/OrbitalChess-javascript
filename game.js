@@ -1,21 +1,21 @@
 var canvas;		
 var context;
-var blackPiecePaths = {
-	"king" 		: "resources/BlackCommandCenter.png",	
-	"knight" 	: "resources/BlackHopper.png",	
-	"queen" 	: "resources/BlackMothership.png",	
-	"bishop" 	: "resources/BlackShuttle.png",	
-	"pawn" 		: "resources/BlackSputnik.png",	
-	"rook"		: "resources/BlackTurret.png"	
+var blackPieceImgs = {
+	"king" 		: makeImage("resources/BlackCommandCenter.png"),	
+	"knight" 	: makeImage("resources/BlackHopper.png"),	
+	"queen" 	: makeImage("resources/BlackMothership.png"),	
+	"bishop" 	: makeImage("resources/BlackShuttle.png"),	
+	"pawn" 		: makeImage("resources/BlackSputnik.png"),	
+	"rook"		: makeImage("resources/BlackTurret.png")	
 } 
 
-var whitePiecePaths = {
-	"king" 		: "resources/WhiteCommandCenter.png",	
-	"knight" 	: "resources/WhiteHopper.png",	
-	"queen" 	: "resources/WhiteMothership.png",	
-	"bishop" 	: "resources/WhiteShuttle.png",	
-	"pawn" 		: "resources/WhiteSputnik.png",	
-	"rook"		: "resources/WhiteTurret.png"	
+var whitePieceImgs = {
+	"king" 		: makeImage("resources/WhiteCommandCenter.png"),	
+	"knight" 	: makeImage("resources/WhiteHopper.png"),	
+	"queen" 	: makeImage("resources/WhiteMothership.png"),	
+	"bishop" 	: makeImage("resources/WhiteShuttle.png"),	
+	"pawn" 		: makeImage("resources/WhiteSputnik.png"),	
+	"rook"		: makeImage("resources/WhiteTurret.png")	
 }
 
 var highlighted = []
@@ -24,6 +24,7 @@ var pieces = []
 
 var rotationRules = [0, 8, 8, 4, 4, 2, 2, 0, 0]
 
+var rTotal;
 
 var selected = null;
 
@@ -230,6 +231,12 @@ function rotateBoard(){
 // 	console.log("(")
 // }
 
+function makeImage(src){
+	var img = new Image();
+	img.src = src;
+	return img;
+}
+
 class Piece {
 	
 	constructor (rad, angle, pType, pColor){
@@ -251,37 +258,34 @@ class Piece {
 	draw(optRad=this.rad,optAngle=this.angle){
 		// console.log(this)
 
-		var imgPath
+		var img
 		if(this.pColor == "black"){
-			imgPath = blackPiecePaths[this.pType];
+			img = blackPieceImgs[this.pType];
 		}
 		if(this.pColor == "white"){
-			imgPath = whitePiecePaths[this.pType];
+			img = whitePieceImgs[this.pType];
 		}
 
-		var img = new Image()
-		var imageLoad = function(rad, angle){
-			if(rad == 0){
-				angle = 11.5
-				rad = -0.5
-			}
-			context.save()
-			var theta = (-angle-1) * (Math.PI/8) + Math.PI/16 - Math.PI/2;
-			var r =  rad * rTotal/8 + 2;
-			context.translate(canvas.width/2,canvas.height/2);
-			context.rotate(theta);
-			if(rad == 1){
-				var imgHeight = rTotal/8 - 12;
-			} else {
-				var imgHeight = rTotal/8 - 4;
-			}
-			var imgWidth = (imgHeight/this.height) * this.width;
-			context.drawImage(this,-imgWidth/2,r+2,imgWidth,imgHeight);
-			context.restore();
+		console.log(img.src);
 
+		
+		if(optRad == 0){
+			optAngle = 11.5
+			optRad = -0.5
 		}
-		img.src = imgPath;		
-		img.onload = imageLoad.bind(img, optRad, optAngle);
+		context.save()
+		var theta = (-optAngle-1) * (Math.PI/8) + Math.PI/16 - Math.PI/2;
+		var r =  optRad * rTotal/8 + 2;
+		context.translate(canvas.width/2,canvas.height/2);
+		context.rotate(theta);
+		if(optRad == 1){
+			var imgHeight = rTotal/8 - 12;
+		} else {
+			var imgHeight = rTotal/8 - 4;
+		}
+		var imgWidth = (imgHeight/img.height) * img.width;
+		context.drawImage(img,-imgWidth/2,r+2,imgWidth,imgHeight);
+		context.restore();
 		
 	}
 	
