@@ -1,4 +1,4 @@
-var canvas;
+var canvas;		
 var context;
 var blackPiecePaths = {
 	"king" 		: "resources/BlackCommandCenter.png",	
@@ -87,8 +87,11 @@ function init(){
 		// console.log(rad);
 		// console.log(angle);
 		var rotateBoardThisTurn = false;
+		console.log(pieceAt(rad,angle));
 		if(selected == null && typeof pieceAt(rad,angle) !== 'undefined'){
+			
 			if(pieceAt(rad,angle).pColor == currentPlayer){
+				console.log("selected")
 				selected = pieceAt(rad,angle);
 			}
 		} else if(isMoveLegal(rad,angle,selected) ){
@@ -120,24 +123,24 @@ function init(){
 	window.onresize = redraw;
 	redraw();
 
-	
-	pieces[0].draw(8,1.5);
 }
 
-function redraw(){
+function redraw(h=0){
+	context.clearRect(0, 0, canvas.width, canvas.height);
 	canvas.width = window.innerWidth - 10;
 	canvas.height = window.innerHeight -110;
 	rTotal = Math.min(canvas.width,canvas.height)/2 - 35;
 	if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
 		rTotal -= 50;
 	}
-	drawBoard();
+	drawBoard(h);
 	for(var i of highlighted){
 		highlightTile(i[0],i[1]);
 	}
 	
 	for(var i of pieces){
-		i.draw();
+		coeff = rotationRules[i.rad];
+		i.draw(i.rad,i.angle+h*coeff);
 	}
 	
 }
@@ -171,19 +174,22 @@ function drawTile(rad, angle, color){
 		context.fillStyle = color
 		context.fill()
 		context.stroke();
+
 	}
 }
 
-function drawBoard(){
-	console.log("drawing board")
-	for (var j = 1; j < 8 ; j+=2) {
+function drawBoard(h){
+	console.log("drawing board");
+	for (var j = 1; j < 8; j+=2) {
+		coeff = rotationRules[j];
 		for (var i = 0; i < 16; i+=2) {
-			drawTile(j,i,"wheat");
-			drawTile(j,i+1,"rosybrown")	;
+			drawTile(j,i+(h*coeff),"wheat");
+			drawTile(j,i+(h*coeff)+1,"rosybrown")	;
 		}
+		coeff = rotationRules[j+1];
 		for (var i = 0; i < 16; i+=2) {
-			drawTile(j+1,i+1,"wheat");
-			drawTile(j+1,i,"rosybrown");
+			drawTile(j+1,i+(h*coeff)+1,"wheat");
+			drawTile(j+1,i+(h*coeff),"rosybrown");
 		}
 		
 	}
@@ -194,43 +200,25 @@ function drawBoard(){
 function rotateBoard(){
 	console.log("rotateBoard")
 	
-	var time = 500;
+	var time = 200;
 	var interval = 10;
 	var step = interval/time;
 	var h = 0;
 
 	var tid = setInterval(function(){
 		h += step;
-		for (var j = 1; j < 8 ; j+=2) {
-			coeff = rotationRules[j]
-			for (var i = 0; i < 16; i+=2) {
-				drawTile(j,i+(h*coeff),"wheat");
-				drawTile(j,i+1+(h*coeff),"rosybrown");
-				if(typeof pieceAt(j,i) !== 'undefined'){
-					pieceAt(j,i).draw(j,i+(h*coeff));
-				}
-
-				// if(typeof pieceAt(j,i) !== 'undefined'){pieceAt(j,i).draw(j,i+(h*coeff));}
-				// if(typeof pieceAt(j,i+1) !== 'undefined'){pieceAt(j,i+1).draw(j,i+(h*coeff));}
-				
-			}
-			coeff = rotationRules[j+1];
-			for (var i = 0; i < 16; i+=2) {
-				drawTile(j+1,i+1+(h*coeff),"wheat");
-				drawTile(j+1,i+(h*coeff),"rosybrown");
-				// if(typeof pieceAt(j+1,i) !== 'undefined'){pieceAt(j+1,i).draw(j+1,i+(h*coeff));}
-				// if(typeof pieceAt(j+1,i+1) !== 'undefined'){pieceAt(j+1,i+1).draw(j+1,i+(h*coeff));}
-			}	
-		
-		}
+		redraw(h);
+		checkStop();
 	},interval)
-	setTimeout(function(){
-	    clearInterval(tid); //clear above interval after 5 seconds
-	    for(p of pieces){
-	    	p.move(p.rad,p.angle+rotationRules[p.rad])
-	    }
-	    redraw();
-	},time);
+	
+	function checkStop(){
+		if(h >= 1){
+			clearInterval(tid);
+			for(p of pieces){
+				p.move(p.rad,p.angle+rotationRules[p.rad])
+			}
+		}
+	}
 
 	
 
@@ -254,10 +242,13 @@ class Piece {
 
 	move(rad, angle){
 		this.rad = rad;
+		while(angle>15){
+			angle -= 16
+		}
 		this.angle = angle;
 	}
 
-	draw(optRad,optAngle){
+	draw(optRad=this.rad,optAngle=this.angle){
 		// console.log(this)
 
 		var imgPath
@@ -287,13 +278,11 @@ class Piece {
 			var imgWidth = (imgHeight/this.height) * this.width;
 			context.drawImage(this,-imgWidth/2,r+2,imgWidth,imgHeight);
 			context.restore();
+
 		}
-		img.src = imgPath;
-		if(typeof optRad !== 'undefined' && typeof optAngle !== 'undefined'){
-			img.onload = imageLoad.bind(img, optRad, optAngle)
-		} else {
-			img.onload = imageLoad.bind(img, this.rad, this.angle)
-		}
+		img.src = imgPath;		
+		img.onload = imageLoad.bind(img, optRad, optAngle);
+		
 	}
 	
 }
@@ -379,8 +368,9 @@ function isMoveLegal(rad,angle,piece){
 		}
 
 	}
+	var legal;
 	if(piece){
-		var legal = moveTypes[piece.pType](rad,angle,piece);
+		legal = moveTypes[piece.pType](rad,angle,piece);
 	}
 	if(typeof legal == 'undefined'){
 		legal = false;
