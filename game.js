@@ -22,7 +22,10 @@ var highlighted = []
 
 var pieces = []
 
-var selected = '';
+var rotationRules = [0, 8, 8, 4, 4, 2, 2, 0, 0]
+
+
+var selected = null;
 
 var move = 0;
 var currentPlayer = 'white'
@@ -83,8 +86,8 @@ function init(){
 		// console.log('('+x+','+y+')');
 		// console.log(rad);
 		// console.log(angle);
-		
-		if(selected == '' && typeof pieceAt(rad,angle) !== 'undefined'){
+		var rotateBoardThisTurn = false;
+		if(selected == null && typeof pieceAt(rad,angle) !== 'undefined'){
 			if(pieceAt(rad,angle).pColor == currentPlayer){
 				selected = pieceAt(rad,angle);
 			}
@@ -92,12 +95,14 @@ function init(){
 			var index = pieces.indexOf(pieceAt(rad, angle));
 			if (index !== -1) pieces.splice(index, 1);
 			selected.move(rad,angle);
-			selected = '';
+			selected = null;
 			move++;
+			redraw();
 			if(currentPlayer=='white'){
 				currentPlayer = 'black';
 			} else {
 				currentPlayer = 'white';
+				rotateBoardThisTurn = true;
 			}
 		}
 
@@ -105,10 +110,18 @@ function init(){
 
 		redraw();
 
+		if(rotateBoardThisTurn == true){
+			rotateBoard();
+		}
+
+
 	});
 
 	window.onresize = redraw;
 	redraw();
+
+	
+	pieces[0].draw(8,1.5);
 }
 
 function redraw(){
@@ -178,6 +191,51 @@ function drawBoard(){
 	
 }
 
+function rotateBoard(){
+	console.log("rotateBoard")
+	
+	var time = 500;
+	var interval = 10;
+	var step = interval/time;
+	var h = 0;
+
+	var tid = setInterval(function(){
+		h += step;
+		for (var j = 1; j < 8 ; j+=2) {
+			coeff = rotationRules[j]
+			for (var i = 0; i < 16; i+=2) {
+				drawTile(j,i+(h*coeff),"wheat");
+				drawTile(j,i+1+(h*coeff),"rosybrown");
+				if(typeof pieceAt(j,i) !== 'undefined'){
+					pieceAt(j,i).draw(j,i+(h*coeff));
+				}
+
+				// if(typeof pieceAt(j,i) !== 'undefined'){pieceAt(j,i).draw(j,i+(h*coeff));}
+				// if(typeof pieceAt(j,i+1) !== 'undefined'){pieceAt(j,i+1).draw(j,i+(h*coeff));}
+				
+			}
+			coeff = rotationRules[j+1];
+			for (var i = 0; i < 16; i+=2) {
+				drawTile(j+1,i+1+(h*coeff),"wheat");
+				drawTile(j+1,i+(h*coeff),"rosybrown");
+				// if(typeof pieceAt(j+1,i) !== 'undefined'){pieceAt(j+1,i).draw(j+1,i+(h*coeff));}
+				// if(typeof pieceAt(j+1,i+1) !== 'undefined'){pieceAt(j+1,i+1).draw(j+1,i+(h*coeff));}
+			}	
+		
+		}
+	},interval)
+	setTimeout(function(){
+	    clearInterval(tid); //clear above interval after 5 seconds
+	    for(p of pieces){
+	    	p.move(p.rad,p.angle+rotationRules[p.rad])
+	    }
+	    redraw();
+	},time);
+
+	
+
+}
+
 // function onClick(event){
 // 	var x = event.pageX - canvas.offsetLeft;
 // 	var y = event.pageY- canvas.offsetTop;
@@ -199,8 +257,9 @@ class Piece {
 		this.angle = angle;
 	}
 
-	draw(){
+	draw(optRad,optAngle){
 		// console.log(this)
+
 		var imgPath
 		if(this.pColor == "black"){
 			imgPath = blackPiecePaths[this.pType];
@@ -230,8 +289,11 @@ class Piece {
 			context.restore();
 		}
 		img.src = imgPath;
-		img.onload = imageLoad.bind(img, this.rad, this.angle)
-			
+		if(typeof optRad !== 'undefined' && typeof optAngle !== 'undefined'){
+			img.onload = imageLoad.bind(img, optRad, optAngle)
+		} else {
+			img.onload = imageLoad.bind(img, this.rad, this.angle)
+		}
 	}
 	
 }
@@ -317,7 +379,9 @@ function isMoveLegal(rad,angle,piece){
 		}
 
 	}
-	var legal = moveTypes[piece.pType](rad,angle,piece);
+	if(piece){
+		var legal = moveTypes[piece.pType](rad,angle,piece);
+	}
 	if(typeof legal == 'undefined'){
 		legal = false;
 	}
