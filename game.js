@@ -56,7 +56,6 @@ function init(){
 	pieces.push(new Piece(8,12,"king","white"));
 	pieces.push(new Piece(8,11,"queen","white"));
 
-	pieces.push(new Piece(4,4,"rook","white"));
 	
 	
 
@@ -401,6 +400,10 @@ function isMoveLegal(rad,angle,piece){
 					return true;
 				}
 
+			}
+
+			if(piece.rad == 0 && rad <= 2){
+				return true;
 			}
 
 			if(Math.abs(angle - piece.angle) == 2 && Math.abs(rad - piece.rad) == 1){
