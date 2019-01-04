@@ -50,14 +50,15 @@ function init(){
 		pieces.push(new Piece(6,5+8*i,"pawn",side[i]));
 		pieces.push(new Piece(7,5+8*i,"pawn",side[i]));
 		pieces.push(new Piece(8,6+8*i,"pawn",side[i]));
+
 	}
 	pieces.push(new Piece(8,3,"king","black"));
 	pieces.push(new Piece(8,4,"queen","black"));
 	pieces.push(new Piece(8,12,"king","white"));
 	pieces.push(new Piece(8,11,"queen","white"));
 
-	
-	
+	// pieces.push(new Piece(8,0,"bishop","black"));
+	// pieces.push(new Piece(8,8,"queen","white"));
 
 	canvas = $("#canvas").get()[0];
 	context = canvas.getContext("2d");
@@ -75,6 +76,10 @@ function init(){
 			rad = -1;
 		}
 
+		if(rad==0){
+			angle = 0;
+		}
+
 		// console.log('('+x+','+y+')');
 		// console.log(rad);
 		// console.log(angle);
@@ -90,6 +95,7 @@ function init(){
 			if(pieceAt(rad,angle).pColor == currentPlayer){
 				console.log("selected")
 				selected = pieceAt(rad,angle);
+				highlighted.push([rad,angle]);
 				for (var j = 0; j <= 8; j++) {
 					for (var i = 0; i < 16; i++) {
 						if(isMoveLegal(j,i,selected)){
@@ -136,17 +142,17 @@ function init(){
 	}
 
 	for(var i in whitePieceImgs){
-		whitePieceImgs[i].onload = redrawTwice;
+		whitePieceImgs[i].onload = redraw;
 	}
 
 	redraw();
 
 }
 
-function redrawTwice(){
-	redraw();
-	redraw();
-}
+// function redrawTwice(){
+// 	redraw();
+// 	redraw();
+// }
 
 function redraw(h=0){
 	
@@ -418,14 +424,7 @@ function isMoveLegal(rad,angle,piece){
 		},
 		"queen" : function(rad,angle,piece){
 			// console.log("checking for pawn")
-			if(typeof pieceAt(rad, angle) !== 'undefined'){
-				// console.log(pieceAt(rad, angle).pColor);
-				// console.log(piece.pColor);
-				if(pieceAt(rad, angle).pColor == piece.pColor){
-					return false;
-				}
-			}
-			return true;
+			return isMoveLegal(rad,angle,new Piece(piece.rad,piece.angle,"bishop",piece.pColor)) || isMoveLegal(rad,angle,new Piece(piece.rad,piece.angle,"rook",piece.pColor))
 		},
 		"bishop" : function(rad,angle,piece){
 			// console.log("checking for pawn")
@@ -435,8 +434,46 @@ function isMoveLegal(rad,angle,piece){
 				if(pieceAt(rad, angle).pColor == piece.pColor){
 					return false;
 				}
+
+				// if(rad-angle == piece.rad-piece.angle){
+				// 	return true;
+				// }
+
 			}
-			return true;
+			
+			var moves = [[1,1],[1,-1],[-1,1],[-1,-1]]
+			for(m of moves){
+				var hasBounced = false
+				var dR = m[0];
+				var dA = m[1];
+				var cR = piece.rad;
+				var cA = piece.angle;
+				var blocked = false;
+
+				while(cR >= 0 && cR <= 8 ){
+					if(cR == rad && cA == angle && !blocked){
+						return true;
+					}
+					cR += dR;
+					cA += dA;
+					cA -= (cA > 15 ? 16 : 0);
+					cA += (cA < 0 ? 16 : 0);
+					if(cR==8 && !hasBounced){
+						dR = - dR
+						hasBounced = true;
+					}
+					if(typeof pieceAt(cR,cA) !== 'undefined' && !(cR == rad && cA == angle)){
+						blocked = true;
+					}
+				}
+			}
+
+			if(rad == 0){
+
+			}
+
+
+			return false;
 		},
 		"rook" : function(rad,angle,piece){
 
