@@ -372,27 +372,46 @@ function isMoveLegal(rad,angle,piece){
 				}
 
 				if(Math.abs(angle - piece.angle) <= 1 && Math.abs(rad - piece.rad) <= 1){
-					return true
+					return true;
 				}
 
 			}
 
 			if(Math.abs(angle - piece.angle) <= 1 && Math.abs(rad - piece.rad) <= 1){
-				return true
+				return true;
 			}
 
 			return true;
 		},
 		"knight" : function(rad,angle,piece){
 			// console.log("checking for pawn")
+
 			if(typeof pieceAt(rad, angle) !== 'undefined'){
 				// console.log(pieceAt(rad, angle).pColor);
 				// console.log(piece.pColor);
 				if(pieceAt(rad, angle).pColor == piece.pColor){
 					return false;
 				}
+
+				if(Math.abs(angle - piece.angle) == 3 && Math.abs(rad - piece.rad) == 2){
+					return true;
+				}
+
+				if(Math.abs(angle - piece.angle) == 2 && Math.abs(rad - piece.rad) == 3){
+					return true;
+				}
+
 			}
-			return true;
+
+			if(Math.abs(angle - piece.angle) == 2 && Math.abs(rad - piece.rad) == 1){
+				return true;
+			}
+
+			if(Math.abs(angle - piece.angle) == 1 && Math.abs(rad - piece.rad) == 2){
+				return true;
+			}
+
+			return false;
 		},
 		"queen" : function(rad,angle,piece){
 			// console.log("checking for pawn")
