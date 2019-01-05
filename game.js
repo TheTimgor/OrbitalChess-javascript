@@ -28,6 +28,8 @@ var rTotal;
 
 var selected = null;
 
+var promoteFrame = false;
+
 var move = 0;
 var currentPlayer = 'white'
 
@@ -57,9 +59,6 @@ function init(){
 	pieces.push(new Piece(8,12,"king","white"));
 	pieces.push(new Piece(8,11,"queen","white"));
 
-	// pieces.push(new Piece(8,0,"bishop","black"));
-	// pieces.push(new Piece(8,8,"queen","white"));
-
 	canvas = $("#canvas").get()[0];
 	context = canvas.getContext("2d");
 
@@ -86,6 +85,23 @@ function init(){
 
 		for (var i = highlighted.length - 1; i >= 0; i--) {
 			highlighted.splice(i);
+		}
+
+		if(promoteFrame && Math.abs(x) < rTotal / 4 && Math.abs(y) < rTotal / 4 ){
+			if(x>0 && y>0){
+				pieceAt(0,0).pType = "knight"
+			}
+			if(x<0 && y>0){
+				pieceAt(0,0).pType = "queen"
+			}
+			if(x<0 && y<0){
+				pieceAt(0,0).pType = "rook"
+			}
+			if(x>0 && y<0){
+				pieceAt(0,0).pType = "bishop"
+			}
+			promoteFrame = false;
+			console.log("closing promoteFrame")
 		}
 
 		var rotateBoardThisTurn = false;
@@ -126,6 +142,12 @@ function init(){
 
 		console.log(selected);
 
+		if(typeof pieceAt(0,0) !== 'undefined'){
+			if(pieceAt(0,0).pType == 'pawn'){
+				promoteFrame = true;
+			}
+		}
+
 		redraw();
 
 		if(rotateBoardThisTurn == true){
@@ -135,7 +157,7 @@ function init(){
 
 	});
 
-	window.onresize = redraw;
+	window.onresize = redrawTwice;
 
 	for(var i in blackPieceImgs){
 		blackPieceImgs[i].onload = redraw;
@@ -149,10 +171,10 @@ function init(){
 
 }
 
-// function redrawTwice(){
-// 	redraw();
-// 	redraw();
-// }
+function redrawTwice(){
+	redraw();
+	redraw();
+}
 
 function redraw(h=0){
 	
@@ -170,6 +192,39 @@ function redraw(h=0){
 	for(var i of pieces){
 		coeff = rotationRules[i.rad];
 		i.draw(i.rad,i.angle+h*coeff);
+	}
+
+	if(promoteFrame){
+
+		context.beginPath();
+		frameWidth = rTotal / 4;
+		context.rect(canvas.width/2,canvas.height/2,-frameWidth,-frameWidth)
+		context.rect(canvas.width/2,canvas.height/2, frameWidth,-frameWidth)
+		context.rect(canvas.width/2,canvas.height/2,-frameWidth, frameWidth)
+		context.rect(canvas.width/2,canvas.height/2, frameWidth, frameWidth)
+		context.fillStyle = "wheat";
+		context.fill();
+		context.stroke();
+
+
+		context.save();
+		context.translate(canvas.width/2,canvas.height/2);
+		var img;
+		var color = pieceAt(0,0).pColor;
+		var promoteTypes = [["queen","rook"],["knight","bishop"]];
+		for(i in promoteTypes){
+			for(j in promoteTypes[i]){
+				if(color == "black"){
+					img = blackPieceImgs[promoteTypes[i][j]];
+				}
+				if(color == "white"){
+					img = whitePieceImgs[promoteTypes[i][j]];
+				}
+				var imgHeight = rTotal/5;
+				var imgWidth = (imgHeight/img.height) * img.width;
+				context.drawImage(img,(i*2-1)*((frameWidth - imgWidth) / 2),(j*2-1)*((frameWidth - imgHeight) / 2),(i*2-1)*imgWidth,(j*2-1)*imgHeight);
+			}
+		}
 	}
 	
 }
@@ -398,14 +453,10 @@ function isMoveLegal(rad,angle,piece){
 					return false;
 				}
 
-				if(Math.abs(angle - piece.angle) == 3 && Math.abs(rad - piece.rad) == 2){
-					return true;
-				}
+			}
 
-				if(Math.abs(angle - piece.angle) == 2 && Math.abs(rad - piece.rad) == 3){
-					return true;
-				}
-
+			if(piece.rad == 0){
+				return rad == 1;
 			}
 
 			if(piece.rad == 0 && rad <= 2){
@@ -440,6 +491,13 @@ function isMoveLegal(rad,angle,piece){
 				// }
 
 			}
+
+			if(rad == 0){
+				return false;
+			}
+			if(piece.rad == 0){
+				return rad == 1;
+			}
 			
 			var moves = [[1,1],[1,-1],[-1,1],[-1,-1]]
 			for(m of moves){
@@ -468,22 +526,12 @@ function isMoveLegal(rad,angle,piece){
 				}
 			}
 
-			if(rad == 0){
-
-			}
 
 
 			return false;
 		},
 		"rook" : function(rad,angle,piece){
 
-			if(rad == 0){
-				return false;
-			}
-			// console.log("checking for pawn")
-			if(!(piece.rad == rad || piece.angle == angle)){
-				return false;
-			}
 
 			if(typeof pieceAt(rad, angle) !== 'undefined'){
 				// console.log(pieceAt(rad, angle).pColor);
@@ -491,6 +539,18 @@ function isMoveLegal(rad,angle,piece){
 				if(pieceAt(rad, angle).pColor == piece.pColor){
 					return false;				
 				}
+			}
+
+			if(piece.rad == 0){
+				return rad == 1;
+			}
+
+			if(rad == 0){
+				return false;
+			}
+			// console.log("checking for pawn")
+			if(!(piece.rad == rad || piece.angle == angle)){
+				return false;
 			}
 
 			if(piece.rad == rad){
