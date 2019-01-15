@@ -59,9 +59,6 @@ function init(){
 	pieces.push(new Piece(8,12,"king","white"))
 	pieces.push(new Piece(8,11,"queen","white"))
 
-	pieces.push(new Piece(0,0,"queen","white"))
-	pieces.push(new Piece(4,15,"knight","white"))
-
 	canvas = $("#canvas").get()[0]
 	context = canvas.getContext("2d")
 
