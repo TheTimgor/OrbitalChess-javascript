@@ -33,7 +33,11 @@ var promoteFrame = false
 var move = 0
 var currentPlayer = 'white'
 
+var mostRecentTimestamp = 0
+
 function init(){
+
+	// postToServer('init')
 
 	var side = ["black","white"]
 	for(i in side){
@@ -127,10 +131,8 @@ function init(){
 
 
 		} else if(isMoveLegal(rad,angle,selected) ){
-			var index = pieces.indexOf(pieceAt(rad, angle))
-			if (index != -1){ pieces.splice(index, 1) }
-			selected.move(rad,angle)
-			selected.hasMoved = true
+			makeMove(selected,rad,angle)
+			// postToServer("makeMove",[rad,angle,selected.rad,selected.angle])
 			selected = null
 			move++
 			redraw()
@@ -156,6 +158,7 @@ function init(){
 
 		if(rotateBoardThisTurn == true){
 			rotateBoard()
+			// postToServer("rotateBoard")
 		}
 
 
@@ -172,8 +175,16 @@ function init(){
 	}
 
 	checkBoard()
-
 	redraw()
+
+	// doInBackground()
+}
+
+function makeMove(p,rad,angle,listPieces=pieces){
+	var index = pieces.indexOf(pieceAt(rad, angle))
+	if (index != -1){ pieces.splice(index, 1) }
+	p.move(rad,angle)
+	p.hasMoved = true
 
 }
 
@@ -183,8 +194,8 @@ function checkCheck(king,listPieces=pieces){
 
 	var check = false
 	for(var p of listPieces){
-		if(p!= king){
-			if(isMoveLegal(king.rad,king.angle,p,listPieces)){
+		if(p.pColor != king.pColor){
+			if(isMoveLegal(king.rad,king.angle,p)){
 				check = true
 			}
 		}
@@ -195,17 +206,17 @@ function checkCheck(king,listPieces=pieces){
 
 function checkMate(king){
 	for(var p of pieces){
-		for (var j = 0; j <= 8; j++) {
-			for (var i = 0; i < 16; i++) {
-				if(isMoveLegal(j,i,p)){
-					var cps = copyPieces()	
-					console.log(cps)
-					if(typeof cps !== "undefined"){
-						var cp = pieceAt(i, j,cp)
-						var index = cps.indexOf(pieceAt(rad, angle, cps))
+		if(p.pColor == king.pColor){
+			for (var j = 0; j <= 8; j++) {
+				for (var i = 0; i < 16; i++) {
+					if(isMoveLegal(j,i,p)){
+						var cps = copyPieces()	
+						var cp = pieceAt(p.rad, p.angle, cps)
+						var index = cps.indexOf(pieceAt(i, j, cps))
 						if (index != -1){ cps.splice(index, 1) }
-						if(typeof cps !== "undefined" && !checkCheck(king,cps)){
-							return false
+						cp.move(i,j,cps)
+						if(!checkCheck(king,cps)){
+							return false	
 						}
 					}
 				}
@@ -227,10 +238,14 @@ function checkBoard(){
 		if(king && checkCheck(king)){
 			highlighted.push([king.rad,king.angle,"red"])
 		}
-		// if(king && checkMate(king)){
-		// 	alert("checkmate!")
-		// }
+		if(king && checkMate(king)){
+			redraw()
+			setTimeout(alert.bind(null,"Checkmate!"),500)
+		}
+
 	}
+	console.log("calling redraw")
+	redraw()
 }
 
 function redrawTwice(){
@@ -349,7 +364,8 @@ function drawBoard(h){
 
 function rotateBoard(){
 	console.log("rotateBoard")
-	
+	highlighted = []
+
 	var time = 1000
 	var interval = 10
 	var step = interval/time
@@ -367,8 +383,9 @@ function rotateBoard(){
 			for(p of pieces){
 				p.move(p.rad,p.angle+rotationRules[p.rad])
 			}
-			checkBoard()
-			redraw()
+
+			setTimeout(redraw,10)
+			setTimeout(checkBoard,20)
 		}
 	}
 
@@ -442,16 +459,19 @@ class Piece {
 	}
 
 	copy(){
-		return new Piece(this.rad,this.angle,this.pieceAt,this.pColor)
+		var p = new Piece(this.rad,this.angle,this.pType,this.pColor)
+		p.hasMoved=this.hasMoved
+		return p
 	}
 	
 }
 
 function copyPieces(listPieces=pieces){
 	var cp = []
-	for(p of listPieces){
+	for(var p of listPieces){
 		cp.push(p.copy())
 	}
+	return cp
 }
 
 function pieceAt(rad,angle,listPieces=pieces){
@@ -719,5 +739,39 @@ function isMoveLegal(rad,angle,piece,listPieces=pieces){
 	console.log("isMoveLegal:",legal)
 	return legal
 }
+
+// function postToServer(f,params){
+// 	timestamp = Date.now()
+// 	payload = {
+// 		"timestamp": timestamp,
+// 		"f": f,
+// 		"params": params
+// 	}
+// 	$.post("updateData.php",payload)
+//
+// }
+
+// function getFromServer(){
+// 	$.getJSON('data',function(data){
+// 		timestamp = data["timestamp"]
+// 		f = data["f"]
+// 		params = data["params"]
+// 		console.log(timestamp,mostRecentTimestamp)
+// 		if(timestamp > mostRecentTimestamp){
+// 			console.log(f)
+// 			if(f=="rotateBoard"){
+// 				rotateBoard()
+// 			}
+// 			mostRecentTimestamp = timestamp
+// 		}
+// 	})
+//
+// }
+//
+// function doInBackground(){
+// 	console.log("doInBackground")
+// 	getFromServer()
+// 	setTimeout(doInBackground,500)
+// }
 
 $(document).ready(init)
